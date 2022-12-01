@@ -152,6 +152,8 @@ fn build_component(type_info: &TypeInfo, fields: Vec<ReflectField>) -> Box<dyn R
         ReflectType::List => todo!(),
         ReflectType::Map => todo!(),
         ReflectType::Value => todo!(),
+        ReflectType::Array => todo!(),
+        ReflectType::Enum => todo!(),
     }
 }
 
@@ -350,11 +352,10 @@ mod test {
 
     #[test]
     fn prefab_parse() {
-        let input = "SomeName { dosomething!(), Visible, Draw }";
+        let input = "SomeName { dosomething!(), Visibility }";
         let mut parsed = PrefabParser::parse(Rule::prefab, input).unwrap();
         let mut reg = PrefabRegistry::default();
-        reg.register_type::<Visible>();
-        reg.register_type::<Draw>();
+        reg.register_type::<Visibility>();
 
         let prefab = parse_prefab(parsed.next().unwrap(), &reg).unwrap();
 
@@ -369,14 +370,7 @@ mod test {
 
         match &prefab.steps[1] {
             PrefabBuildStep::AddComponent(comp) => {
-                assert_eq!(comp.type_name, "Visible");
-            }
-            PrefabBuildStep::RunCommand(_) => unreachable!(),
-        }
-
-        match &prefab.steps[2] {
-            PrefabBuildStep::AddComponent(comp) => {
-                assert_eq!(comp.type_name, "Draw");
+                assert_eq!(comp.type_name, "Visibility");
             }
             PrefabBuildStep::RunCommand(_) => unreachable!(),
         }

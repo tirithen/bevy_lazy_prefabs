@@ -6,8 +6,7 @@ use bevy::{
 };
 
 use crate::{
-    prefab::{Prefab, PrefabCommandData, PrefabComponent},
-    PrefabRegistry,
+    prefab::{Prefab, PrefabCommandData, PrefabComponent}, PrefabRegistry,
 };
 
 pub trait SpawnPrefabCommands {
@@ -17,7 +16,7 @@ pub trait SpawnPrefabCommands {
     fn insert_prefab(&mut self, prefab: &Prefab) -> &mut Self;
 }
 
-impl SpawnPrefabCommands for EntityCommands<'_, '_> {
+impl SpawnPrefabCommands for EntityCommands<'_, '_, '_> {
     fn insert_prefab(&mut self, prefab: &Prefab) -> &mut Self {
         let id = self.id();
         for step in prefab.steps.iter() {
@@ -47,7 +46,7 @@ struct AddComponentCommand {
 }
 
 impl Command for AddComponentCommand {
-    fn write(self: Box<Self>, world: &mut World) {
+    fn write(self, world: &mut World) {
         let entity = self.entity;
         let component = self.component;
 
@@ -65,9 +64,9 @@ impl Command for AddComponentCommand {
         }.clone();
 
         if world.entity(entity).contains_type_id(type_id) {
-            reflect.apply_component(world, entity, &*component.reflect);
+            reflect.apply(world, entity, &*component.reflect);
         } else {
-            reflect.add_component(world, entity, &*component.reflect);
+            reflect.insert(world, entity, &*component.reflect);
         }
     }
 }
@@ -78,7 +77,7 @@ pub struct PrefabProcessCommand {
 }
 
 impl Command for PrefabProcessCommand {
-    fn write(self: Box<Self>, world: &mut World) {
+    fn write(self, world: &mut World) {
         let entity = self.entity;
         let data = self.data;
         let command_name = data.name.as_str();

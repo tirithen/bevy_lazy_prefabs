@@ -2,7 +2,6 @@ use bevy::{
     prelude::*,
     render::{
         camera::{Camera, OrthographicProjection},
-        render_graph::base::MainPass,
     },
 };
 
@@ -13,7 +12,7 @@ use crate::{build_commands::*, PrefabRegistry};
 pub struct LazyPrefabsPlugin;
 
 impl Plugin for LazyPrefabsPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(LazyPrefabsMinimalPlugin)
             .add_plugin(LazyPrefabsCommonTypesPlugin)
             .add_plugin(LazyPrefabsBevy3DPlugin)
@@ -23,16 +22,16 @@ impl Plugin for LazyPrefabsPlugin {
 
 pub struct LazyPrefabsMinimalPlugin;
 impl Plugin for LazyPrefabsMinimalPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.init_resource::<PrefabRegistry>();
     }
 }
 
 pub struct LazyPrefabsCommonTypesPlugin;
 impl Plugin for LazyPrefabsCommonTypesPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         let mut reg = app
-            .world_mut()
+            .world
             .get_resource_mut::<PrefabRegistry>()
             .unwrap();
 
@@ -49,16 +48,15 @@ impl Plugin for LazyPrefabsCommonTypesPlugin {
 
 pub struct LazyPrefabsBevy3DPlugin;
 impl Plugin for LazyPrefabsBevy3DPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         let mut reg = app
-            .world_mut()
-            .get_resource_mut::<PrefabRegistry>()
+            .world.get_resource_mut::<PrefabRegistry>()
             .unwrap();
-        reg.register_type::<Visible>();
+        reg.register_type::<Visibility>();
         reg.register_type::<Handle<Mesh>>();
-        reg.register_type::<RenderPipelines>();
-        reg.register_type::<Draw>();
-        reg.register_type::<MainPass>();
+        // reg.register_type::<RenderPipelines>();
+        // reg.register_type::<Draw>();
+        // reg.register_type::<MainPass>();
 
         reg.register_build_command::<InsertPbrBundle>();
         reg.register_build_command::<InsertPerspectiveCameraBundle>();
@@ -67,9 +65,9 @@ impl Plugin for LazyPrefabsBevy3DPlugin {
 
 pub struct LazyPrefabsBevy2DPlugin;
 impl Plugin for LazyPrefabsBevy2DPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         let mut reg = app
-            .world_mut()
+            .world
             .get_resource_mut::<PrefabRegistry>()
             .unwrap();
 

@@ -19,7 +19,7 @@ use derivative::*;
 ///
 /// fn setup(mut commands: Commands, mut registry: ResMut<PrefabRegistry>) {
 ///     let prefab = registry.load("some_prefab.prefab").unwrap();
-///     commands.spawn().insert_prefab(prefab);
+///     commands.spawn_empty().insert_prefab(prefab);
 /// }
 /// ```
 #[derive(Debug, TypeUuid)]

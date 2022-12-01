@@ -12,7 +12,7 @@ use crate::{
 };
 
 /// Manages and caches [Prefab] related data.
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct PrefabRegistry {
     type_data: HashMap<String, TypeInfo>,
     commands: HashMap<String, Arc<dyn BuildPrefabCommand + Send + Sync + 'static>>,
@@ -35,7 +35,7 @@ impl PrefabRegistry {
     /// use bevy::prelude::*;
     /// use bevy_lazy_prefabs::*;
     ///
-    /// #[derive(Default, Reflect)]
+    /// #[derive(Default, Component, Reflect)]
     /// #[reflect(Component)]
     /// struct MyComponent {
     ///     i: i32,
@@ -130,6 +130,8 @@ pub(crate) enum ReflectType {
     List,
     Map,
     Value,
+    Array,
+    Enum,
 }
 
 impl From<ReflectRef<'_>> for ReflectType {
@@ -141,6 +143,8 @@ impl From<ReflectRef<'_>> for ReflectType {
             ReflectRef::List(_) => ReflectType::List,
             ReflectRef::Map(_) => ReflectType::Map,
             ReflectRef::Value(_) => ReflectType::Value,
+            ReflectRef::Array(_) => ReflectType::Array,
+            ReflectRef::Enum(_) => ReflectType::Enum,
         }
     }
 }

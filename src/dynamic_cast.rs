@@ -69,12 +69,12 @@ impl GetValue for DynamicStruct {
                 Some(value) => Ok(value),
                 None => Err(GetValueError::FailedCast(
                     "DynamicStruct".to_string(),
-                    T::get_type_registration().name().to_string(),
+                    T::get_type_registration().type_name().to_string(),
                 )),
             },
             None => Err(GetValueError::FieldDoesntExist(
                 field_name.to_string(),
-                T::get_type_registration().name().to_string(),
+                T::get_type_registration().type_name().to_string(),
             )),
         }
     }
@@ -95,12 +95,12 @@ impl GetValue for DynamicStruct {
                 Some(value) => Ok(value),
                 None => Err(GetValueError::FailedCast(
                     "DynamicStruct".to_string(),
-                    T::get_type_registration().name().to_string(),
+                    T::get_type_registration().type_name().to_string(),
                 )),
             },
             None => Err(GetValueError::FieldDoesntExist(
                 field_name.to_string(),
-                T::get_type_registration().name().to_string(),
+                T::get_type_registration().type_name().to_string(),
             )),
         }
     }

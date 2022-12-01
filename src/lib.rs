@@ -1,7 +1,7 @@
 //! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 //! [![Crates.io](https://img.shields.io/crates/v/bevy_lazy_prefabs)](https://crates.io/crates/bevy_lazy_prefabs)
 //! [![docs](https://docs.rs/bevy_lazy_prefabs/badge.svg)](https://docs.rs/bevy_lazy_prefabs/)
-//! 
+//!
 //!  A crate for simple human readable/writable prefab text files in bevy.
 //!
 //! Note: This is not intended to be a flexible and long-term prefab solution, but should serve well for
@@ -17,15 +17,14 @@
 //!             x: 15.0, y: 10.5,  // Any omitted fields will be initialized to default.
 //!         },
 //!     },
-//!     Visible,                   // If you choose not to initialize any fields, the braces can be omitted entirely.
-//!     Draw,
+//!     Visibility,                // If you choose not to initialize any fields, the braces can be omitted entirely.
 //!     SomeComponent {            // Custom components are supported
 //!         some_int: 15,
 //!     },
 //! }
 //! ```
 //!
-//! In the above example we are authoring a prefab with `Transform`, `Visible`, `Draw`, and `SomeComponent` components.
+//! In the above example we are authoring a prefab with `Transform`, `Visibility`, and `SomeComponent` components.
 //! In this case the entity's transform will be initialized to position (15.0,10.0,0.0) when entity is spawned.
 //!
 //! Custom components will only work in prefabs if they derive `Reflect` and `Default`, and if they have the
@@ -53,9 +52,9 @@
 //!
 //! ```ignore
 //! {
-//!     InsertSpriteBundle! (          
+//!     InsertSpriteBundle! (
 //!         texture_path: "alien.png",
-//!         color: Color::RED,         
+//!         color: Color::RED,
 //!     ),
 //! }
 //! ```
@@ -78,9 +77,9 @@
 //!
 //! fn setup(mut commands: Commands, mut registry: ResMut<PrefabRegistry>) {
 //!   let sprite = registry.load("sprite.prefab").unwrap();
-//!   commands.spawn().insert_prefab(sprite);
+//!   commands.spawn_empty().insert_prefab(sprite);
 //!   let cam = registry.load("cam_2d.prefab").unwrap();
-//!   commands.spawn().insert_prefab(cam);
+//!   commands.spawn_empty().insert_prefab(cam);
 //!  }
 //! ```
 

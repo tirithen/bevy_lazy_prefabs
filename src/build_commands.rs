@@ -57,14 +57,14 @@ impl BuildPrefabCommand for SetColorMaterial {
         if let Some(existing_mat) = world.get_mut::<Handle<ColorMaterial>>(entity) {
             let existing_mat = existing_mat.clone_weak();
             world.resource_scope(|world, mut materials: Mut<Assets<ColorMaterial>>| {
-                let mat = materials.get_mut(existing_mat).unwrap();
+                let mat = materials.get_mut(&existing_mat).unwrap();
 
                 if let Some(col) = color {
                     mat.color = *col;
                 }
                 if let Some(path) = path {
                     let server = world.get_resource::<AssetServer>().unwrap();
-                    let tex: Handle<Texture> = server.load(path.as_str());
+                    let tex: Handle<Image> = server.load(path.as_str());
                     mat.texture = Some(tex);
                 }
             });
@@ -86,13 +86,14 @@ fn get_material_props(properties: Option<&DynamicStruct>) -> (Option<&Color>, Op
     (None, None)
 }
 
+/*
 fn get_color_material(
     world: &mut World,
     material_props: (Option<&Color>, Option<&String>),
 ) -> Option<Handle<ColorMaterial>> {
     let (col, path) = material_props;
 
-    let tex: Option<Handle<Texture>> = match path {
+    let tex: Option<Handle<Image>> = match path {
         Some(path) => {
             let server = world.get_resource::<AssetServer>().unwrap();
             Some(server.load(path.as_str()))
@@ -111,6 +112,7 @@ fn get_color_material(
     };
     Some(materials.add(mat))
 }
+*/
 
 /// Loads a prefab and performs it's build steps on the entity.
 ///
@@ -137,13 +139,13 @@ impl BuildPrefabCommand for LoadPrefab {
                                 let type_id = reg.type_id();
                                 let reflect = match reg.data::<ReflectComponent>() {
                                     Some(reflect) => reflect,
-                                    None => panic!("Error reading reflect data. 
+                                    None => panic!("Error reading reflect data.
                                         Does the type {} have the '#[reflect(Component)]' attribute?", reg.short_name()),
                                 }.clone();
                                 if world.entity(entity).contains_type_id(type_id) {
-                                    reflect.apply_component(world, entity, &*comp.reflect);
+                                    reflect.apply(world, entity, &*comp.reflect);
                                 } else {
-                                    reflect.add_component(world, entity, &*comp.reflect);
+                                    reflect.insert(world, entity, &*comp.reflect);
                                 }
                             },
                             crate::prefab::PrefabBuildStep::RunCommand(data) => {
@@ -173,12 +175,19 @@ impl BuildPrefabCommand for LoadPrefab {
 pub struct InsertSpriteBundle;
 impl BuildPrefabCommand for InsertSpriteBundle {
     fn run(&self, properties: Option<&DynamicStruct>, world: &mut World, entity: Entity) {
-        let (color, path) = get_material_props(properties);
-        let mat = get_color_material(world, (color, path));
+        let (_, path) = get_material_props(properties);
+
+        let tex: Option<Handle<Image>> = match path {
+            Some(path) => {
+                let server = world.get_resource::<AssetServer>().unwrap();
+                Some(server.load(path.as_str()))
+            }
+            None => None,
+        };
 
         let mut entity = world.entity_mut(entity);
-        entity.insert_bundle(SpriteBundle {
-            material: mat.unwrap_or_default(),
+        entity.insert(SpriteBundle {
+            texture: tex.unwrap_or_default(),
             ..Default::default()
         });
     }
@@ -217,7 +226,7 @@ impl BuildPrefabCommand for InsertPbrBundle {
             }
         }
 
-        world.entity_mut(entity).insert_bundle(bundle);
+        world.entity_mut(entity).insert(bundle);
     }
 
     fn key(&self) -> &str {
@@ -256,15 +265,15 @@ fn get_mesh(props: &DynamicStruct) -> Option<Mesh> {
 pub struct InsertOrthographicCameraBundle;
 impl BuildPrefabCommand for InsertOrthographicCameraBundle {
     fn run(&self, properties: Option<&DynamicStruct>, world: &mut World, entity: Entity) {
-        let mut bundle = OrthographicCameraBundle::new_2d();
+        let mut bundle = Camera2dBundle::default();
 
         if let Some(props) = properties {
             if let Ok(scale) = props.try_get::<f32>("scale") {
-                bundle.orthographic_projection.scale = *scale;
+                bundle.projection.scale = *scale;
             }
         }
 
-        world.entity_mut(entity).insert_bundle(bundle);
+        world.entity_mut(entity).insert(bundle);
     }
 
     fn key(&self) -> &str {
@@ -282,7 +291,7 @@ impl BuildPrefabCommand for InsertOrthographicCameraBundle {
 pub struct InsertPerspectiveCameraBundle;
 impl BuildPrefabCommand for InsertPerspectiveCameraBundle {
     fn run(&self, properties: Option<&DynamicStruct>, world: &mut World, entity: Entity) {
-        let mut bundle = PerspectiveCameraBundle::new_3d();
+        let mut bundle = Camera3dBundle::default();
 
         if let Some(props) = properties {
             if let Ok(position) = props.try_get::<Vec3>("position") {
@@ -294,7 +303,7 @@ impl BuildPrefabCommand for InsertPerspectiveCameraBundle {
             }
         }
 
-        world.entity_mut(entity).insert_bundle(bundle);
+        world.entity_mut(entity).insert(bundle);
     }
 
     fn key(&self) -> &str {
