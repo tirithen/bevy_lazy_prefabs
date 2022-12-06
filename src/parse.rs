@@ -49,7 +49,7 @@ pub enum LoadPrefabError {
     #[error("Error parsing prefab - unknown value rule: {0}.")]
     UnhandledValueRule(String),
     #[error("Error reading prefab file.")]
-    FileReadError(#[from] std::io::Error),
+    FileReadError(#[from] bevy::asset::AssetIoError),
 }
 
 pub(crate) fn parse_prefab_string(

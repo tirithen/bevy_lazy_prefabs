@@ -11,7 +11,7 @@ simple games and prototyping to avoid having to define your entities entirely in
 
 # .Prefab Files
 
-First, write a *.prefab* file and put it in the *assets/prefabs* directory.
+First, write a *.prefab* file and put it in the *assets/* directory.
 ```rust
 SomePrefab {                   // Prefab name is optional. Outer braces are required.
     Transform {                // Components are listed by type name.
@@ -70,7 +70,7 @@ individual build command.
 
 # Spawning A Prefab
 
-Once you have your *.prefab* file in the *assets/prefabs* directory you can spawn a prefab using the
+Once you have your *.prefab* file in the *assets/* directory you can spawn a prefab using the
 `PrefabRegistry` and `Commands`:
 
 ```rust

@@ -1,10 +1,11 @@
-use std::{fs, sync::Arc};
+use std::{sync::Arc, path::Path};
 
 use bevy::{
     prelude::*,
     reflect::{GetTypeRegistration, ReflectRef, TypeRegistration},
-    utils::HashMap,
+    utils::HashMap, asset::{FileAssetIo, AssetIo},
 };
+use futures_lite::future;
 
 use crate::{
     build_commands::BuildPrefabCommand, parse::parse_prefab_string, parse::LoadPrefabError,
@@ -79,12 +80,15 @@ impl PrefabRegistry {
             return Ok(self.prefabs.get(name).unwrap());
         };
 
-        let path = ["assets/prefabs/", name].join("");
+        let io = FileAssetIo::new("assets/", false);
+        let result = future::block_on(io.load_path(Path::new(name)));
 
-        let prefab_string = match fs::read_to_string(path) {
-            Ok(str) => str,
-            Err(e) => return Err(LoadPrefabError::FileReadError(e)),
-        };
+        if let Err(error) = result {
+            return Err(LoadPrefabError::FileReadError(error));
+        }
+
+        let data = result.unwrap();
+        let prefab_string = String::from_utf8_lossy(&data);
 
         match parse_prefab_string(&prefab_string, self) {
             Ok(prefab) => {

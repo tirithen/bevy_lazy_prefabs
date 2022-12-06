@@ -485,6 +485,7 @@ dependencies = [
  "anyhow",
  "bevy",
  "derivative",
+ "futures-lite",
  "pest",
  "pest_derive",
  "serde",

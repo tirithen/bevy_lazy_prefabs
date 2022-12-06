@@ -13,6 +13,6 @@ fn setup(mut commands: Commands, mut registry: ResMut<PrefabRegistry>) {
     let sprite = registry.load("sprite.prefab").unwrap();
     commands.spawn_empty().insert_prefab(sprite);
 
-    let cam = registry.load("cam2d.prefab").unwrap();
+    let cam = registry.load("cam_2d.prefab").unwrap();
     commands.spawn_empty().insert_prefab(cam);
 }
