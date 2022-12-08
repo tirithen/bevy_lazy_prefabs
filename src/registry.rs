@@ -1,9 +1,10 @@
-use std::{sync::Arc, path::Path};
+use std::{path::Path, sync::Arc};
 
 use bevy::{
+    asset::{AssetIo, FileAssetIo},
     prelude::*,
     reflect::{GetTypeRegistration, ReflectRef, TypeRegistration},
-    utils::HashMap, asset::{FileAssetIo, AssetIo},
+    utils::HashMap,
 };
 use futures_lite::future;
 

@@ -7,14 +7,14 @@ float = @{
     ~ (!".." ~ "." ~ ASCII_DIGIT*)
     ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
 }
-char = { "'" ~ 
+char = { "'" ~
 (LETTER | PUNCTUATION | SYMBOL | ASCII_DIGIT)
 ~ "'" }
 
 default = { "::default()" }
 
 vec2 = { "Vec2" ~ braced_fields? }
-vec3 = { "Vec3" ~ braced_fields? }  
+vec3 = { "Vec3" ~ braced_fields? }
 
 string_inner = _{ (!"\"" ~ (LETTER | NUMBER | SYMBOL | PUNCTUATION))* }
 inner_silent = @{ string_inner }
@@ -25,21 +25,21 @@ array = {
 }
 range = { "(" ~ int ~ ".." ~ int ~ ")" }
 
-id_letter = { LETTER | "_" } 
+id_letter = { LETTER | "_" }
 type_name = @{ id_letter ~ (id_letter | NUMBER )* }
 field_name = @{ id_letter ~ (id_letter | NUMBER )* }
 prefab_name = @{ id_letter ~ (id_letter | NUMBER )* }
-file_name = @{ type_name ~ "." ~ type_name } 
+file_name = @{ type_name ~ "." ~ type_name }
 
 color = { "Color" ~ ( braced_fields | color_presets )? }
 color_presets = _{  "::" ~ color_value }
-color_value = { "BLUE" | "RED" | "GREEN" | "YELLOW" | "PINK" } 
+color_value = { "BLUE" | "RED" | "GREEN" | "YELLOW" | "PINK" }
 
 shape = { shape_id ~ shape_type ~ ("{" ~ fields* ~ "}")? }
 shape_id = _{ ("s" | "S") ~ "hape::" }
 shape_type = { "Plane" | "Cube" | "Quad" }
 
-value = _{ shape | vec2 | vec3 | float | int | color | char | string | range | array }
+value = _{ component | shape | vec2 | vec3 | float | int | color | char | string | range | array }
 
 field = { field_name ~ ":" ~ value }
 fields = _{ field ~ ("," ~ field)* ~ ","? }
@@ -47,10 +47,10 @@ braced_fields = _{ "{" ~ fields ~ "}" }
 
 component = { (type_name ~ component_fields*) }
 component_field = _{ (field | component) }
-component_fields = _{ "{" ~ 
-	component_field ~ ("," ~ component_field)* ~ ","? ~ 
-    "}" 
-    } 
+component_fields = _{ "{" ~
+	component_field ~ ("," ~ component_field)* ~ ","? ~
+    "}"
+    }
 components = _{ component ~ ("," ~ component)* ~ ","? }
 
 prefab = { type_name? ~ ("{" ~ prefab_fields ~ "}") }
@@ -58,6 +58,6 @@ prefab_field = _{ ( command | component ) }
 prefab_fields = _{ prefab_field ~ ("," ~ prefab_field)* ~ ","? }
 
 command = { type_name ~ "!(" ~ fields* ~ ")" }
- 
+
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 COMMENT = _{ "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }

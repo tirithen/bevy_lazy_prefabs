@@ -1,8 +1,6 @@
 use bevy::{
     prelude::*,
-    render::{
-        camera::{Camera, OrthographicProjection},
-    },
+    render::camera::{Camera, OrthographicProjection},
 };
 
 use crate::{build_commands::*, PrefabRegistry};
@@ -30,10 +28,7 @@ impl Plugin for LazyPrefabsMinimalPlugin {
 pub struct LazyPrefabsCommonTypesPlugin;
 impl Plugin for LazyPrefabsCommonTypesPlugin {
     fn build(&self, app: &mut App) {
-        let mut reg = app
-            .world
-            .get_resource_mut::<PrefabRegistry>()
-            .unwrap();
+        let mut reg = app.world.get_resource_mut::<PrefabRegistry>().unwrap();
 
         reg.register_type::<Transform>();
         reg.register_type::<GlobalTransform>();
@@ -49,9 +44,7 @@ impl Plugin for LazyPrefabsCommonTypesPlugin {
 pub struct LazyPrefabsBevy3DPlugin;
 impl Plugin for LazyPrefabsBevy3DPlugin {
     fn build(&self, app: &mut App) {
-        let mut reg = app
-            .world.get_resource_mut::<PrefabRegistry>()
-            .unwrap();
+        let mut reg = app.world.get_resource_mut::<PrefabRegistry>().unwrap();
         reg.register_type::<Visibility>();
         reg.register_type::<Handle<Mesh>>();
         // reg.register_type::<RenderPipelines>();
@@ -66,10 +59,7 @@ impl Plugin for LazyPrefabsBevy3DPlugin {
 pub struct LazyPrefabsBevy2DPlugin;
 impl Plugin for LazyPrefabsBevy2DPlugin {
     fn build(&self, app: &mut App) {
-        let mut reg = app
-            .world
-            .get_resource_mut::<PrefabRegistry>()
-            .unwrap();
+        let mut reg = app.world.get_resource_mut::<PrefabRegistry>().unwrap();
 
         reg.register_type::<Sprite>();
         reg.register_type::<OrthographicProjection>();

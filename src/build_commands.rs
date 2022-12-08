@@ -60,7 +60,7 @@ impl BuildPrefabCommand for SetColorMaterial {
                 let mat = materials.get_mut(&existing_mat).unwrap();
 
                 if let Some(col) = color {
-                    mat.color = *col;
+                    mat.color = col;
                 }
                 if let Some(path) = path {
                     let server = world.get_resource::<AssetServer>().unwrap();
@@ -76,7 +76,7 @@ impl BuildPrefabCommand for SetColorMaterial {
     }
 }
 
-fn get_material_props(properties: Option<&DynamicStruct>) -> (Option<&Color>, Option<&String>) {
+fn get_material_props(properties: Option<&DynamicStruct>) -> (Option<Color>, Option<String>) {
     if let Some(properties) = properties {
         let color = properties.try_get::<Color>("color").ok();
         let tex_path = properties.try_get::<String>("texture_path").ok();
@@ -220,7 +220,7 @@ impl BuildPrefabCommand for InsertPbrBundle {
 
             if let Ok(color) = properties.try_get::<Color>("color") {
                 world.resource_scope(|_, mut materials: Mut<Assets<StandardMaterial>>| {
-                    let mat = materials.add(StandardMaterial::from(*color));
+                    let mat = materials.add(StandardMaterial::from(color));
                     bundle.material = mat;
                 });
             }
@@ -238,16 +238,16 @@ fn get_mesh(props: &DynamicStruct) -> Option<Mesh> {
     if let Ok(shape) = props.try_get::<String>("shape") {
         return match shape.as_str() {
             "Plane" => {
-                let size = *props.try_get::<f32>("size").unwrap_or(&1.0);
+                let size = props.try_get::<f32>("size").unwrap_or(1.0);
                 Some(Mesh::from(shape::Plane { size }))
             }
             "Cube" => {
-                let size = *props.try_get::<f32>("size").unwrap_or(&1.0);
+                let size = props.try_get::<f32>("size").unwrap_or(1.0);
                 Some(Mesh::from(shape::Cube { size }))
             }
             "Quad" => {
-                let size = *props.try_get::<Vec2>("size").unwrap_or(&Vec2::ONE);
-                let flip = *props.try_get::<bool>("flip").unwrap_or(&false);
+                let size = props.try_get::<Vec2>("size").unwrap_or(Vec2::ONE);
+                let flip = props.try_get::<bool>("flip").unwrap_or(false);
                 Some(Mesh::from(shape::Quad { size, flip }))
             }
             _ => None,
@@ -269,7 +269,7 @@ impl BuildPrefabCommand for InsertOrthographicCameraBundle {
 
         if let Some(props) = properties {
             if let Ok(scale) = props.try_get::<f32>("scale") {
-                bundle.projection.scale = *scale;
+                bundle.projection.scale = scale;
             }
         }
 
@@ -295,11 +295,11 @@ impl BuildPrefabCommand for InsertPerspectiveCameraBundle {
 
         if let Some(props) = properties {
             if let Ok(position) = props.try_get::<Vec3>("position") {
-                bundle.transform.translation = *position;
+                bundle.transform.translation = position;
             }
 
             if let Ok(looking_at) = props.try_get::<Vec3>("looking_at") {
-                bundle.transform = bundle.transform.looking_at(*looking_at, Vec3::Y);
+                bundle.transform = bundle.transform.looking_at(looking_at, Vec3::Y);
             }
         }
 

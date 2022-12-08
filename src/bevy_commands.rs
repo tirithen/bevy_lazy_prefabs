@@ -6,7 +6,8 @@ use bevy::{
 };
 
 use crate::{
-    prefab::{Prefab, PrefabCommandData, PrefabComponent}, PrefabRegistry,
+    prefab::{Prefab, PrefabCommandData, PrefabComponent},
+    PrefabRegistry,
 };
 
 pub trait SpawnPrefabCommands {

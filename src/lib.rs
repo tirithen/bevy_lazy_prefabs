@@ -84,13 +84,13 @@
 //! ```
 
 mod bevy_commands;
-mod dynamic_cast;
 mod parse;
 mod plugin;
 mod prefab;
 mod registry;
 
 pub mod build_commands;
+pub mod dynamic_cast;
 
 pub use bevy_commands::SpawnPrefabCommands;
 pub use plugin::LazyPrefabsPlugin;

@@ -75,7 +75,7 @@ fn parse_prefab(pair: Pair<Rule>, registry: &PrefabRegistry) -> Result<Prefab, L
                 steps.push(PrefabBuildStep::AddComponent(Arc::new(comp)));
             }
             Rule::command => {
-                let command = parse_command(field)?;
+                let command = parse_command(field, registry)?;
                 steps.push(PrefabBuildStep::RunCommand(Arc::new(command)));
             }
             _ => {
@@ -105,7 +105,7 @@ fn parse_component(
                 fields.push(ReflectField::from(nested_component));
             }
             Rule::field => {
-                let field = parse_field(field)?;
+                let field = parse_field(field, registry)?;
                 fields.push(field);
             }
             _ => {
@@ -130,6 +130,7 @@ fn build_component(type_info: &TypeInfo, fields: Vec<ReflectField>) -> Box<dyn R
     match type_info.reflect_type {
         ReflectType::Struct => {
             let mut root = DynamicStruct::default();
+            //root.set_name(type_info.registration.type_name().to_string());
             for field in fields {
                 root.insert_boxed(&field.name, field.value);
             }
@@ -157,10 +158,13 @@ fn build_component(type_info: &TypeInfo, fields: Vec<ReflectField>) -> Box<dyn R
     }
 }
 
-fn parse_field(field: Pair<Rule>) -> Result<ReflectField, LoadPrefabError> {
+fn parse_field(
+    field: Pair<Rule>,
+    registry: &PrefabRegistry,
+) -> Result<ReflectField, LoadPrefabError> {
     let mut field = field.into_inner();
     let field_name = field.next().unwrap().as_str();
-    let value = parse_value(field.next().unwrap())?;
+    let value = parse_value(field.next().unwrap(), registry)?;
 
     Ok(ReflectField {
         name: field_name.to_string(),
@@ -168,7 +172,10 @@ fn parse_field(field: Pair<Rule>) -> Result<ReflectField, LoadPrefabError> {
     })
 }
 
-fn parse_value(pair: Pair<Rule>) -> Result<Box<dyn Reflect>, LoadPrefabError> {
+fn parse_value(
+    pair: Pair<Rule>,
+    registry: &PrefabRegistry,
+) -> Result<Box<dyn Reflect>, LoadPrefabError> {
     let value_string = pair.as_str();
     match pair.as_rule() {
         Rule::int => {
@@ -193,11 +200,15 @@ fn parse_value(pair: Pair<Rule>) -> Result<Box<dyn Reflect>, LoadPrefabError> {
             let str = parse_string(pair);
             Ok(Box::new(str))
         }
+        Rule::component => match parse_component(pair, registry) {
+            Ok(c) => Ok(c.reflect),
+            Err(error) => Err(error),
+        },
         Rule::array => {
             let mut list = DynamicList::default();
 
             for value in pair.into_inner() {
-                let array_val = parse_value(value)?;
+                let array_val = parse_value(value, registry)?;
                 list.push_box(array_val);
             }
 
@@ -227,7 +238,7 @@ fn parse_value(pair: Pair<Rule>) -> Result<Box<dyn Reflect>, LoadPrefabError> {
         Rule::vec3 => {
             let mut v = Vec3::default();
             for field in pair.into_inner() {
-                let field = parse_field(field).unwrap();
+                let field = parse_field(field, registry).unwrap();
                 let name = field.name;
                 let val = field.value.cast_ref::<f32>();
                 match name.as_str() {
@@ -244,7 +255,7 @@ fn parse_value(pair: Pair<Rule>) -> Result<Box<dyn Reflect>, LoadPrefabError> {
             for pair in pair.into_inner() {
                 match pair.as_rule() {
                     Rule::field => {
-                        let field = parse_field(pair).unwrap();
+                        let field = parse_field(pair, registry).unwrap();
                         let val = field.value.cast_ref::<f32>();
                         match field.name.as_str() {
                             "r" => {
@@ -296,14 +307,17 @@ fn parse_string(pair: Pair<Rule>) -> String {
     str[1..str.len().saturating_sub(1)].to_string()
 }
 
-fn parse_command(pair: Pair<Rule>) -> Result<PrefabCommandData, LoadPrefabError> {
+fn parse_command(
+    pair: Pair<Rule>,
+    registry: &PrefabRegistry,
+) -> Result<PrefabCommandData, LoadPrefabError> {
     let mut pairs = pair.into_inner();
     let command_name = pairs.next().unwrap().as_str().to_string();
 
     let mut properties = None;
 
     for field in pairs {
-        let field = parse_field(field)?;
+        let field = parse_field(field, registry)?;
         let props = properties.get_or_insert(DynamicStruct::default());
 
         props.insert_boxed(field.name.as_str(), field.value);
@@ -334,30 +348,42 @@ mod test {
 
     #[test]
     fn command_parse() {
-        let input = "DOSTUFF!(i: 10)";
+        let input = "DOSTUFF!(i: 10, pet: Animal {name: \"Polly\"})";
 
         let parse = PrefabParser::parse(Rule::command, input)
             .unwrap()
             .next()
             .unwrap();
+        let mut registry = PrefabRegistry::default();
 
-        let parsed = parse_command(parse).unwrap();
+        #[derive(Debug, Default, Reflect, Component, bevy::reflect::TypeUuid)]
+        #[reflect(Component)]
+        #[uuid = "1feb6b0d-361c-4740-8750-f032e754d329"]
+        struct Animal {
+            name: String,
+        }
+
+        registry.register_type::<Animal>();
+
+        let parsed = parse_command(parse, &registry).unwrap();
 
         let props = parsed.properties.unwrap();
 
-        let i = *props.get::<i32>("i");
-
+        let i = props.get::<i32>("i");
         assert_eq!(i, 10);
+
+        let pet = props.get::<Animal>("pet");
+        assert_eq!(pet.name, "Polly".to_string());
     }
 
     #[test]
     fn prefab_parse() {
         let input = "SomeName { dosomething!(), Visibility }";
         let mut parsed = PrefabParser::parse(Rule::prefab, input).unwrap();
-        let mut reg = PrefabRegistry::default();
-        reg.register_type::<Visibility>();
+        let mut registry = PrefabRegistry::default();
+        registry.register_type::<Visibility>();
 
-        let prefab = parse_prefab(parsed.next().unwrap(), &reg).unwrap();
+        let prefab = parse_prefab(parsed.next().unwrap(), &registry).unwrap();
 
         assert_eq!(prefab.name, Some("SomeName".to_string()));
 
@@ -383,7 +409,8 @@ mod test {
             .unwrap()
             .next()
             .unwrap();
-        let parsed = parse_value(parse);
+        let registry = PrefabRegistry::default();
+        let parsed = parse_value(parse, &registry);
         assert!(parsed.is_ok());
         let val = *parsed.unwrap().downcast::<u8>().unwrap();
         assert_eq!(val as char, 'a');
@@ -397,7 +424,9 @@ mod test {
             .next()
             .unwrap();
 
-        let parsed = parse_value(parse);
+        let registry = PrefabRegistry::default();
+
+        let parsed = parse_value(parse, &registry);
         let val = *parsed.unwrap().downcast::<Color>().unwrap();
 
         assert_eq!(Color::RED, val);
@@ -408,7 +437,7 @@ mod test {
             .next()
             .unwrap();
 
-        let parsed = parse_value(parse);
+        let parsed = parse_value(parse, &registry);
         let col = *parsed.unwrap().downcast::<Color>().unwrap();
         assert_eq!(1.0, col.r());
         assert_eq!(0.5, col.g());
@@ -418,9 +447,9 @@ mod test {
     fn vec_parse() {
         let input = "Vec3 { z: 3.0, x: 10.0 }";
 
-        let mut reg = PrefabRegistry::default();
+        let mut registry = PrefabRegistry::default();
 
-        reg.register_type::<Vec3>();
+        registry.register_type::<Vec3>();
 
         let parse = PrefabParser::parse(Rule::vec3, input)
             .unwrap()
@@ -429,7 +458,7 @@ mod test {
 
         let mut v = Vec3::default();
 
-        let dynamic = parse_value(parse).unwrap();
+        let dynamic = parse_value(parse, &registry).unwrap();
 
         v.apply(&*dynamic);
 
@@ -439,10 +468,10 @@ mod test {
 
     #[test]
     fn transform_parse() {
-        let mut reg = PrefabRegistry::default();
+        let mut registry = PrefabRegistry::default();
 
-        reg.register_type::<Vec3>();
-        reg.register_type::<Transform>();
+        registry.register_type::<Vec3>();
+        registry.register_type::<Transform>();
 
         let input = "Transform { translation: Vec3 { y: 3.5, x: 10.5 } }";
 
@@ -451,7 +480,7 @@ mod test {
             .next()
             .unwrap();
 
-        let comp = parse_component(parsed, &reg).unwrap();
+        let comp = parse_component(parsed, &registry).unwrap();
 
         let mut transform = Transform::default();
 
@@ -474,8 +503,9 @@ mod test {
     fn field_parse() {
         let input = "a: \"hi\"";
 
+        let registry = PrefabRegistry::default();
         let mut parse = PrefabParser::parse(Rule::field, input).unwrap();
-        let field = parse_field(parse.next().unwrap()).unwrap();
+        let field = parse_field(parse.next().unwrap(), &registry).unwrap();
 
         assert_eq!("a", field.name);
         assert_eq!("hi", field.value.cast_ref::<String>());
